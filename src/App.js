@@ -8,6 +8,8 @@ import {
   Timestamp,
   onSnapshot,
   doc,
+  query,
+  orderBy,
 } from "firebase/firestore";
 
 function App() {
@@ -17,12 +19,25 @@ function App() {
 
   useEffect(() => {
     const postData = collection(db, "posts");
-    getDocs(postData).then((snapShot) => {
-      // console.log(snapShot.docs.map((doc) => ({ ...doc.data() })));
-      setPosts(snapShot.docs.map((doc) => ({ ...doc.data() })));
+    const queryRef = query(postData, orderBy("timestamp"));
+
+    getDocs(queryRef).then((querySnapshot) => {
+      const data = querySnapshot.docs.map((doc) => ({ ...doc.data() }));
+      setPosts(data);
     });
 
-    onSnapshot(postData, (posts) => {
+    // 上のコードの類似コード
+    // getDocs(queryRef).then((querySnapshot) => {
+    //   setPosts(querySnapshot.docs.map((doc) => ({ ...doc.data() })));
+    //   // setPosts(querySnapshot.docs.map((doc) => doc.data()));
+    // });
+
+    // getDocs(postData).then((snapShot) => {
+    //   // console.log(snapShot.docs.map((doc) => ({ ...doc.data() })));
+    //   setPosts(snapShot.docs.map((doc) => ({ ...doc.data() })));
+    // });
+
+    onSnapshot(queryRef, (posts) => {
       setPosts(posts.docs.map((doc) => ({ ...doc.data() })));
     });
   }, []);
