@@ -95,14 +95,16 @@ function App() {
           <input type="text" ref={todoRef} />
         </div>
 
-        <label>
-          <input type="text" ref={titleRef}></input>
-          title
-        </label>
-        <label>
-          <input type="text" ref={textRef}></input>
-          text
-        </label>
+        <div>
+          <label>
+            title
+            <input type="text" ref={titleRef}></input>
+          </label>
+          <label>
+            text
+            <input type="text" ref={textRef}></input>
+          </label>
+        </div>
         <button onClick={handleAddTask}>タスクの追加</button>
         <button onClick={handleAddTask}>タスクの削除</button>
         <TodoList todos={todos} toggleTodo={toggleTodo} />
