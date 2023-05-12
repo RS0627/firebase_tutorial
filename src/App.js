@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import db from "./firebase";
 import {
@@ -11,11 +11,14 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
+import TodoList from "./components/TodoList";
+import { v4 as uuidv4 } from "uuid";
 
 function App() {
   const [posts, setPosts] = useState([]);
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
+  const [todos, settodos] = useState([
+    { id: 1, name: "todo13", completed: false },
+  ]);
 
   useEffect(() => {
     const postData = collection(db, "posts");
@@ -31,16 +34,30 @@ function App() {
     });
   }, []);
 
-  const handleTitle = useCallback((e) => {
-    setTitle(e.target.value);
+  const todoRef = useRef();
+  const handleAddTask = useCallback((e) => {
+    const addTask = todoRef.current.value;
+    settodos((prevtodos) => [
+      ...prevtodos,
+      { id: uuidv4(), name: addTask, completed: false },
+    ]);
+    todoRef.current.value = null;
   }, []);
-  const handleText = useCallback((e) => {
-    setText(e.target.value);
-  }, []);
+  const toggleTodo = (id) => {
+    const newTodos = [...todos];
+    const todo = newTodos.find((todo) => todo.id === id);
+    todo.completed = !todo.completed;
+    settodos(newTodos);
+  };
 
+  const titleRef = useRef();
+  const textRef = useRef();
   const handleClick = useCallback(
     (e) => {
-      if (title.length === 0 || text.length === 0) {
+      if (
+        titleRef.current.value.length === 0 ||
+        textRef.current.value.length === 0
+      ) {
         alert("titleおよびtextに何か入力して下さい");
       } else {
         try {
@@ -48,8 +65,8 @@ function App() {
           let timestamp = Timestamp.fromMillis(Date.now());
           // console.log(timestamp.toDate());
           addDoc(collection(db, "posts"), {
-            title: title,
-            text: text,
+            title: titleRef.current.value,
+            text: textRef.current.value,
             timestamp: timestamp,
           }).then((docRef) => {
             console.log("Document written with ID: ", docRef.id);
@@ -59,7 +76,7 @@ function App() {
         }
       }
     },
-    [title, text]
+    [titleRef, textRef]
   );
 
   return (
@@ -73,11 +90,22 @@ function App() {
             </div>
           ))}
         </div>
-        <label>title</label>
-        <input type="text" onChange={handleTitle}></input>
-        <label>text</label>
-        <input type="text" onChange={handleText}></input>
         <button onClick={handleClick}>記録</button>
+        <div>
+          <input type="text" ref={todoRef} />
+        </div>
+
+        <label>
+          <input type="text" ref={titleRef}></input>
+          title
+        </label>
+        <label>
+          <input type="text" ref={textRef}></input>
+          text
+        </label>
+        <button onClick={handleAddTask}>タスクの追加</button>
+        <button onClick={handleAddTask}>タスクの削除</button>
+        <TodoList todos={todos} toggleTodo={toggleTodo} />
       </div>
     </div>
   );
