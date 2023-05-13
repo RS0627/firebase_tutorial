@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 
 function App() {
   const [posts, setPosts] = useState([]);
+  const [deleteFlag, setDeleteFlag] = useState(false);
 
   useEffect(() => {
     const postData = collection(db, "posts");
@@ -34,7 +35,8 @@ function App() {
     onSnapshot(queryRef, (posts) => {
       setPosts(posts.docs.map((doc) => ({ ...doc.data(), completed: false })));
     });
-  }, []);
+    setDeleteFlag(false);
+  }, [deleteFlag]);
 
   const taskRef = useRef();
   const handleAddTask = useCallback(
@@ -65,7 +67,6 @@ function App() {
   );
   const handleDeleteTask = useCallback((e) => {
     const newPosts = posts.filter((post) => post.completed);
-    const restPosts = posts.filter((post) => !post.completed);
     newPosts.map((post) => {
       const collectionRef = collection(db, "posts");
       const queryRef = query(collectionRef, where("id", "==", post.id));
@@ -74,17 +75,26 @@ function App() {
           querySnapshot.forEach((docSnapshot) => {
             const docId = docSnapshot.id;
             console.log("ドキュメントID:", docId);
-            const docRef = doc(collectionRef, docId);
-            deleteDoc(docRef)
-              .then(() => {
-                console.log("ドキュメントの削除に成功しました。");
-              })
-              .catch((err) => {
-                console.log("ドキュメントの削除中にエラーが発生しました:", err);
-              });
+
+            const shouldDelete = window.confirm(
+              "「" + post.task + "」" + "を削除しますか？"
+            );
+            if (shouldDelete) {
+              const docRef = doc(collectionRef, docId);
+              deleteDoc(docRef)
+                .then(() => {
+                  console.log("ドキュメントの削除に成功しました。");
+                })
+                .catch((err) => {
+                  console.log(
+                    "ドキュメントの削除中にエラーが発生しました:",
+                    err
+                  );
+                });
+            }
           });
-          // ローカル管理のpostsには未完了をセットする
-          setPosts(restPosts);
+          // 削除があったら、useEffectを呼び出す
+          setDeleteFlag(true);
         })
         .catch((error) => {
           console.error("ドキュメントの取得中にエラーが発生しました:", error);
