@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 
 const Todo = (props) => {
   const handleAddTodo = useCallback((e) => {
-    props.toggleTodo(props.todo.id);
+    props.toggleTodo(props.post.id);
   });
 
   return (
@@ -10,11 +10,11 @@ const Todo = (props) => {
       <label>
         <input
           type="checkbox"
-          checked={props.todo.completed}
+          checked={props.post.completed}
           readOnly
           onChange={handleAddTodo}
         />
-        {props.todo.text}
+        {props.post.task}
       </label>
     </div>
   );
