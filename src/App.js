@@ -5,11 +5,13 @@ import {
   collection,
   getDocs,
   addDoc,
+  deleteDoc,
   Timestamp,
   onSnapshot,
   doc,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import TodoList from "./components/TodoList";
 import { v4 as uuidv4 } from "uuid";
@@ -61,6 +63,34 @@ function App() {
     },
     [taskRef]
   );
+  const handleDeleteTask = useCallback((e) => {
+    const newPosts = posts.filter((post) => post.completed);
+    const restPosts = posts.filter((post) => !post.completed);
+    newPosts.map((post) => {
+      const collectionRef = collection(db, "posts");
+      const queryRef = query(collectionRef, where("id", "==", post.id));
+      getDocs(queryRef)
+        .then((querySnapshot) => {
+          querySnapshot.forEach((docSnapshot) => {
+            const docId = docSnapshot.id;
+            console.log("ドキュメントID:", docId);
+            const docRef = doc(collectionRef, docId);
+            deleteDoc(docRef)
+              .then(() => {
+                console.log("ドキュメントの削除に成功しました。");
+              })
+              .catch((err) => {
+                console.log("ドキュメントの削除中にエラーが発生しました:", err);
+              });
+          });
+          // ローカル管理のpostsには未完了をセットする
+          setPosts(restPosts);
+        })
+        .catch((error) => {
+          console.error("ドキュメントの取得中にエラーが発生しました:", error);
+        });
+    });
+  });
   const toggleTodo = (id) => {
     const newPosts = [...posts];
     const post = newPosts.find((post) => post.id === id);
@@ -79,7 +109,7 @@ function App() {
           </label>
         </div>
         <button onClick={handleAddTask}>タスクの追加</button>
-        <button onClick={handleAddTask}>タスクの削除</button>
+        <button onClick={handleDeleteTask}>タスクの削除</button>
       </div>
     </div>
   );
