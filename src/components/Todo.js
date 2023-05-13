@@ -14,8 +14,8 @@ const Todo = (props) => {
           readOnly
           onChange={handleAddTodo}
         />
+        {props.todo.text}
       </label>
-      {props.todo.name}
     </div>
   );
 };

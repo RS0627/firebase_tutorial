@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 function App() {
   const [posts, setPosts] = useState([]);
   const [todos, settodos] = useState([
-    { id: 1, name: "todo13", completed: false },
+    { id: 1, text: "test", completed: false },
   ]);
 
   useEffect(() => {
@@ -34,14 +34,13 @@ function App() {
     });
   }, []);
 
-  const todoRef = useRef();
   const handleAddTask = useCallback((e) => {
-    const addTask = todoRef.current.value;
+    const addText = textRef.current.value;
     settodos((prevtodos) => [
       ...prevtodos,
-      { id: uuidv4(), name: addTask, completed: false },
+      { id: uuidv4(), text: addText, completed: false },
     ]);
-    todoRef.current.value = null;
+    textRef.current.value = null;
   }, []);
   const toggleTodo = (id) => {
     const newTodos = [...todos];
@@ -50,14 +49,10 @@ function App() {
     settodos(newTodos);
   };
 
-  const titleRef = useRef();
   const textRef = useRef();
   const handleClick = useCallback(
     (e) => {
-      if (
-        titleRef.current.value.length === 0 ||
-        textRef.current.value.length === 0
-      ) {
+      if (textRef.current.value.length === 0) {
         alert("titleおよびtextに何か入力して下さい");
       } else {
         try {
@@ -65,7 +60,6 @@ function App() {
           let timestamp = Timestamp.fromMillis(Date.now());
           // console.log(timestamp.toDate());
           addDoc(collection(db, "posts"), {
-            title: titleRef.current.value,
             text: textRef.current.value,
             timestamp: timestamp,
           }).then((docRef) => {
@@ -76,7 +70,7 @@ function App() {
         }
       }
     },
-    [titleRef, textRef]
+    [textRef]
   );
 
   return (
@@ -84,22 +78,14 @@ function App() {
       <div>
         <div>
           {posts.map((post) => (
-            <div key={post.title}>
-              <h1>{post.title}</h1>
+            <div key={post.timestamp}>
               <p>{post.text}</p>
             </div>
           ))}
         </div>
         <button onClick={handleClick}>記録</button>
-        <div>
-          <input type="text" ref={todoRef} />
-        </div>
 
         <div>
-          <label>
-            title
-            <input type="text" ref={titleRef}></input>
-          </label>
           <label>
             text
             <input type="text" ref={textRef}></input>
