@@ -16,51 +16,39 @@ import { v4 as uuidv4 } from "uuid";
 
 function App() {
   const [posts, setPosts] = useState([]);
-  const [todos, settodos] = useState([
-    { id: 1, text: "test", completed: false },
-  ]);
 
   useEffect(() => {
     const postData = collection(db, "posts");
     const queryRef = query(postData, orderBy("timestamp"));
 
     getDocs(queryRef).then((querySnapshot) => {
-      const data = querySnapshot.docs.map((doc) => ({ ...doc.data() }));
+      const data = querySnapshot.docs.map((doc) => ({
+        ...doc.data(),
+        completed: false,
+      }));
       setPosts(data);
     });
 
     onSnapshot(queryRef, (posts) => {
-      setPosts(posts.docs.map((doc) => ({ ...doc.data() })));
+      setPosts(posts.docs.map((doc) => ({ ...doc.data(), completed: false })));
     });
   }, []);
 
-  const handleAddTask = useCallback((e) => {
-    const addText = textRef.current.value;
-    settodos((prevtodos) => [
-      ...prevtodos,
-      { id: uuidv4(), text: addText, completed: false },
-    ]);
-    textRef.current.value = null;
-  }, []);
-  const toggleTodo = (id) => {
-    const newTodos = [...todos];
-    const todo = newTodos.find((todo) => todo.id === id);
-    todo.completed = !todo.completed;
-    settodos(newTodos);
-  };
-
-  const textRef = useRef();
-  const handleClick = useCallback(
+  const taskRef = useRef();
+  const handleAddTask = useCallback(
     (e) => {
-      if (textRef.current.value.length === 0) {
-        alert("titleおよびtextに何か入力して下さい");
+      const addTask = taskRef.current.value;
+
+      if (addTask.length === 0) {
+        alert("タスクに何か入力して下さい");
+        return;
       } else {
         try {
           // Timestampを作成
           let timestamp = Timestamp.fromMillis(Date.now());
-          // console.log(timestamp.toDate());
           addDoc(collection(db, "posts"), {
-            text: textRef.current.value,
+            id: uuidv4(),
+            task: addTask,
             timestamp: timestamp,
           }).then((docRef) => {
             console.log("Document written with ID: ", docRef.id);
@@ -69,31 +57,29 @@ function App() {
           console.error("Error adding document: ", e);
         }
       }
+      taskRef.current.value = null;
     },
-    [textRef]
+    [taskRef]
   );
+  const toggleTodo = (id) => {
+    const newPosts = [...posts];
+    const post = newPosts.find((post) => post.id === id);
+    post.completed = !post.completed;
+    setPosts(newPosts);
+  };
 
   return (
     <div className="App">
       <div>
-        <div>
-          {posts.map((post) => (
-            <div key={post.timestamp}>
-              <p>{post.text}</p>
-            </div>
-          ))}
-        </div>
-        <button onClick={handleClick}>記録</button>
-
+        <TodoList posts={posts} toggleTodo={toggleTodo} />
         <div>
           <label>
-            text
-            <input type="text" ref={textRef}></input>
+            追加タスク：
+            <input type="text" ref={taskRef}></input>
           </label>
         </div>
         <button onClick={handleAddTask}>タスクの追加</button>
         <button onClick={handleAddTask}>タスクの削除</button>
-        <TodoList todos={todos} toggleTodo={toggleTodo} />
       </div>
     </div>
   );
